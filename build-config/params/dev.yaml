@@ -1,0 +1,9 @@
+account_prefix: dev
+cicdpipeline_branch: dev
+tl_developer_role: aws-reserved/sso.amazonaws.com/ap-southeast-2/AWSReservedSSO_TL-DP-AdminNoIAM_0ae4bf7bcd58240e
+vpc_stack: TL-Data-Lake-Dev-VPC
+code_commit_branches: dev
+snowflake_account: lj20743.ap-southeast-2.snowflakecomputing.com
+snowflake_warehouse: DP_DEV_WH_ADMIN
+snowflake_metadata_database: DP_DEV_MTD
+snowflake_metadata_schema: MTD

@@ -1,0 +1,84 @@
+version: 0.2
+
+env:
+  git-credential-helper: yes
+
+phases:
+  install:
+    commands:
+      - ls -ltr /root/.pyenv/shims/
+      - pyenv global 3.9.13
+      - python --version
+      - pip install sceptre
+      - pip install wheel
+      - sceptre --version
+  pre_build:
+    commands:
+      - ls -ltr /root/.pyenv/shims/
+      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - pwd
+      - |
+        if [ -f build-config/release.txt ];
+        then
+          DEPLOYMENT_LIST=$(pwd)/build-config/release.txt
+        else
+          git diff-tree --no-commit-id --name-only -r $CODEBUILD_RESOLVED_SOURCE_VERSION > ./git-diff.txt
+          DEPLOYMENT_LIST=$(pwd)/git-diff.txt
+        fi
+      - echo $DEPLOYMENT_LIST
+      - echo $(cat $DEPLOYMENT_LIST)
+      - ls -ltr
+  build:
+    commands:
+      - echo 'Apps build - start'
+      - echo 'Lambda Apps Build - '
+      - echo $(cat $DEPLOYMENT_LIST)
+      - |
+        for _a in $(cat $DEPLOYMENT_LIST | grep apps/lambda | awk '{split($0, a, "/"); print a[3]}' | sort | uniq | grep -v '^\.');
+          do
+            echo "Building -> $_a";
+            cd apps/lambda/$_a
+            VERSION=$(python -c "import __metadata__ as meta; print(meta.__version__)")
+            PY_VERSION=$(python -c "import __metadata__ as meta; print(meta.__python_version__)")
+            if [ $PY_VERSION == "3.7" ]; then pyenv local 3.7.10; fi
+            if [ $PY_VERSION == "3.9" ]; then pyenv local 3.9.13; fi
+            python -V
+            if [ -f requirements.txt ];
+            then
+              echo "INFO :Found requirements file, dependencies will be installed before build"
+              pip3 install -r requirements.txt --target ./
+            fi
+            zip -gr ../../../$_a-$VERSION.zip ./
+            aws s3 cp ../../../$_a-$VERSION.zip $S3_REPO_PATH/apps/lambda/$_a/$_a-$VERSION.zip
+            cd ../../../
+          done
+      - echo 'Glue Job Build - '
+      - echo $(cat $DEPLOYMENT_LIST)
+      - |
+        for _a in $(cat $DEPLOYMENT_LIST | grep apps/glue | awk '{split($0, a, "/"); print a[3]}' | sort | uniq | grep -v '^\.');
+          do
+            echo "Building -> $_a";
+            cd apps/glue/$_a
+            VERSION=$(python -c "import __metadata__ as meta; print(meta.__version__)")
+            PY_VERSION=$(python -c "import __metadata__ as meta; print(meta.__python_version__)")
+            if [ $PY_VERSION == "3.7" ]; then pyenv local 3.7.10; fi
+            if [ $PY_VERSION == "3.9" ]; then pyenv local 3.9.13; fi
+            python -V
+            if [ -f setup.py ];
+            then
+                echo "INFO :Found setup.py file, wheel will be created for dependencies."
+                python setup.py bdist_wheel
+                rm -rf build
+            fi
+            aws s3 sync ./ $S3_REPO_PATH/apps/glue/$_a/$VERSION/ --exclude '*' --include '*.py' --include '*.whl' --delete
+            cd ../../../
+          done
+      - echo 'Apps build - end'
+      - echo 'Syncing great expecation config'
+      - aws s3 sync ./great-expectations $S3_REPO_PATH/great-expectations
+      - echo 'Cloudformation deployemnt - start'
+      - echo $CLOUDFORMATION_ROLE
+      - cd ./cfn-templates
+      - cat $DEPLOYMENT_LIST | grep -v config.yaml | grep ^cfn-templates/config/ | grep .yaml | while read in; do sceptre --var-file=../build-config/params/$ENV.yaml launch ${in:21} -y; done
+      - echo 'Cloudformation deployemnt - end'
+      - # Deploy Great ex
