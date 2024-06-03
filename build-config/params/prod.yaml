@@ -1,9 +1,9 @@
 account_prefix: prod
 cicdpipeline_branch: prod
-tl_developer_role: aws-reserved/sso.amazonaws.com/ap-southeast-2/AWSReservedSSO_TL-DP-AdminNoIAM_0dbaed1ed9c95feb
-vpc_stack: TL-Data-Lake-Prod-VPC
+tl_developer_role: 
+vpc_stack: 
 code_commit_branches: prod
-snowflake_account: lj20743.ap-southeast-2.snowflakecomputing.com
-snowflake_warehouse: DP_SRC_SRV_WH_PROD
-snowflake_metadata_database: DP_PROD_MTD
-snowflake_metadata_schema: MTD
+snowflake_account: 
+snowflake_warehouse: 
+snowflake_metadata_database: 
+snowflake_metadata_schema: 

@@ -1,9 +1,9 @@
 account_prefix: poc
 cicdpipeline_branch: poc
-tl_developer_role: aws-reserved/sso.amazonaws.com/ap-southeast-2/AWSReservedSSO_TL-DP-Developer-Dev_a16f2f82c81ec3e9
-vpc_stack: vpcDeploy
+tl_developer_role: 
+vpc_stack: 
 code_commit_branches: poc
-snowflake_account: lj20743.ap-southeast-2.snowflakecomputing.com
-snowflake_warehouse: DP_DEV_WH_ADMIN
-snowflake_metadata_database: DP_DEV_MTD
-snowflake_metadata_schema: MTD
+snowflake_account: 
+snowflake_warehouse: 
+snowflake_metadata_database: 
+snowflake_metadata_schema: 
